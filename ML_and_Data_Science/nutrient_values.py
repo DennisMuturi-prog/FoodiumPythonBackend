@@ -6,18 +6,23 @@ import numpy as np
 from textblob import Word
 from fractions import Fraction
 
+import os
+
+cwd = os.getcwd()
+print('current working directory',cwd)
+
 def singularize(word):
   return Word(word).singularize()
-food_densities=pd.read_excel('../datasets/density_DB_v2_0_final-1__1_.xlsx',
+food_densities=pd.read_excel('./datasets/density_DB_v2_0_final-1__1_.xlsx',
                              sheet_name='Density DB')
-nlp_ner = spacy.load("../datasets/ML Models/model-best-nlp-ner/model-best")
-recipe_data=pd.read_csv('../datasets/final_2M_sample_recipes.csv')
+nlp_ner = spacy.load("./datasets/ML Models/model-best-nlp-ner/model-best")
+recipe_data=pd.read_csv('./datasets/final_2M_sample_recipes.csv')
 def calculateStringLength(row):
   if pd.isna(row):
     return 0
   return len(row)
 food_densities['stringLength']=food_densities['Food name and description'].apply(calculateStringLength)
-food_nutrients=pd.read_csv('../datasets/knn_imputed_nutrients.csv')
+food_nutrients=pd.read_csv('./datasets/knn_imputed_nutrients.csv')
 myarray=[2,1,23,24,46,61,76,146,151,176,180,150,207,208,201,210,211,215]
 wantedColumns=[]
 all_colums=food_nutrients.columns
@@ -162,5 +167,10 @@ def populateNutrientValues(row):
   except:
     print('error in populate nutrients at:')
     return np.zeros(16,dtype=float)
-
-print(populateNutrientValues(recipe_data.loc[0]))
+def testing():
+  return populateNutrientValues(recipe_data.loc[0])
+  
+  
+if __name__=='__main__':
+  print(populateNutrientValues(recipe_data.loc[0]))
+  
