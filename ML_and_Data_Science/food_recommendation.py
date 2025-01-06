@@ -6,11 +6,11 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.feature_extraction.text import TfidfVectorizer
 from collections import defaultdict
 
-with open('../datasets/ML Models/TFIDF/tfidf_vectorizer.pkl', 'rb') as file:
+with open('./datasets/ML Models/TFIDF/tfidf_vectorizer.pkl', 'rb') as file:
     tfidf_vectorizer = pickle.load(file)
 
 # print(tfidf_vectorizer.vocabulary_.items())
-model = Word2Vec.load("../datasets/ML Models/Word2VecModel/model_cbow3.bin")
+model = Word2Vec.load("./datasets/ML Models/Word2VecModel/model_cbow3.bin")
 print(model.wv.most_similar("salt"))
 max_idf = max(tfidf_vectorizer.idf_)
 word_idf_weight = defaultdict(
@@ -38,15 +38,17 @@ def doc_average_list(docs):
 
 # ingredientsEmbeddings = np.load('/content/drive/MyDrive/archive/embeddings.npy')
 nn=NearestNeighbors(algorithm='brute',metric='cosine')
-nearestNeighborModel=nn.fit(np.load('../datasets/ML Models/Ingredients_embeddings/embeddings.npy'))
+nearestNeighborModel=nn.fit(np.load('./datasets/ML Models/Ingredients_embeddings/embeddings.npy'))
 
 def makePrediction(ingredientsList):
   ingredientsList_embedding=doc_average(ingredientsList).reshape(1,-1)
   distances,indices=nearestNeighborModel.kneighbors(ingredientsList_embedding,n_neighbors=10)
   return indices[0]
 
-inputs=['chicken thigh', 'onion', 'rice noodle', 'seaweed nori sheet', 'sesame', 'shallot', 'soy', 'spinach', 'star', 'tofu']
-print(makePrediction(inputs))
+if __name__=='__main__':
+  inputs=['chicken thigh', 'onion', 'rice noodle', 'seaweed nori sheet', 'sesame', 'shallot', 'soy', 'spinach', 'star', 'tofu']
+  print(makePrediction(inputs))
+  
   
   
   
