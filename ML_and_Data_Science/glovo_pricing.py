@@ -20,7 +20,7 @@ async def fetch(session,store,itemName):
         return {
             "htmlContent":content,
             "itemName":itemName,
-            "store":store 
+            "store":store,
         }
 
 def parse(fetchResponse):
@@ -50,6 +50,8 @@ def parse(fetchResponse):
         except Exception as e:
             print(f"error in parser:{e} {item['data']['name']}")
             continue
+    
+    allPriceInfo['foundItems'] = allPriceInfo['foundItems'][:5]
     redis_client.setex(f"{fetchResponse['itemName']}:{fetchResponse['store']}",3600*6,json.dumps(allPriceInfo))
     return allPriceInfo
 
