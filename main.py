@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from ML_and_Data_Science.glovo_pricing import getPriceInfo
+from ML_and_Data_Science.glovo_pricing import getAllPricesInfo
 from ML_and_Data_Science.food_recommendation import makePrediction
 # from ML_and_Data_Science.nutrient_values import testing
 from fastapi import HTTPException
@@ -9,8 +9,8 @@ class PriceRequest(BaseModel):
     names:list[str]
     store:str
 class RecommendationRequest(BaseModel):
-    names:list[str]
-    store:str
+    ingredientsList:list[str]
+    region:str
 
 app=FastAPI()
 
@@ -27,21 +27,23 @@ async def getPricesInfo(ingredients:PriceRequest):
     try:
         # asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         # response= asyncio.run(main(ingredients))
-        response= await getPriceInfo(ingredients)
+        response= await getAllPricesInfo(ingredients)
         return response
     except Exception as e:
-        print('ERROR:',e)
+        print('ERROR in getting prices:',e)
         raise HTTPException(status_code=404, detail="Items not found")
 
     
     
 @app.post("/recommendation")
-async def getRecommendations(ingredients:list[str]):
-    print(ingredients)
+async def getRecommendations(recommendation:RecommendationRequest):
+    print(recommendation)
     try:
-        response=makePrediction(ingredients)
+        response=makePrediction(recommendation.ingredientsList,recommendation.region)
+        print(response)
         return response
-    except Exception:
+    except Exception as e:
+        print('error in recommendation',e)
         raise HTTPException(status_code=404, detail="predictions for recommendations failed")
         
         
