@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 import re
 import json
+import redis
+redis_client=redis.StrictRedis(host='localhost',port=6379,decode_responses=True)
 
 
 
@@ -17,7 +19,8 @@ async def fetch(session,store,itemName):
         # print(f"Fetched URL: {url}")
         return {
             "htmlContent":content,
-            "itemName":itemName   
+            "itemName":itemName,
+            "store":store 
         }
 
 def parse(fetchResponse):
@@ -32,7 +35,7 @@ def parse(fetchResponse):
     ingredientsInfo = ingredientsInfo.replace('PLACEHOLDER_HTTPS', 'https:')
     ingredientsInfo = ingredientsInfo.replace('PLACEHOLDER_DH', 'dh:')
     ingredientsInfo = json.loads(ingredientsInfo)
-    allIngredientsInfo={
+    allPriceInfo={
         "itemName":fetchResponse['itemName'],
         "foundItems":[]
     }
@@ -43,11 +46,12 @@ def parse(fetchResponse):
                 "imageUrl":item['data']['imageUrl'],
                 "price":item['data']['price']
             }
-            allIngredientsInfo['foundItems'].append(info)
+            allPriceInfo['foundItems'].append(info)
         except Exception as e:
             print(f"error in parser:{e} {item['data']['name']}")
             continue
-    return allIngredientsInfo
+    redis_client.set(f"{fetchResponse['itemName']}:{fetchResponse['store']}",json.dumps(allPriceInfo))
+    return allPriceInfo
 
 async def getPriceInfo(items):
     """
@@ -56,7 +60,7 @@ async def getPriceInfo(items):
     results=[]
     async with aiohttp.ClientSession() as session:
         # Create a list of tasks for fetching URLs
-        tasks = [fetch(session,items.store, url) for url in items.names]
+        tasks = [fetch(session,items["store"], url) for url in items["names"]]
         # Gather all responses concurrently
         fetchResponses = await asyncio.gather(*tasks)
 
@@ -64,6 +68,23 @@ async def getPriceInfo(items):
         with ThreadPoolExecutor(max_workers=4) as executor:
             results=list(executor.map(parse, fetchResponses))
     return results
+
+async def getAllPricesInfo(items):
+    cacheMissItems=[]
+    all_goods_prices_info=[]
+    for itemName in items.names:
+        cacheHit=redis_client.get(f"{itemName}:{items.store}")
+        if cacheHit is None:
+            cacheMissItems.append(itemName)
+            continue
+        all_goods_prices_info.append(json.loads(cacheHit))
+    if len(cacheMissItems)==0:
+        return all_goods_prices_info
+    results_from_slower_path=await getPriceInfo({"store":items.store,"names":cacheMissItems})
+    for goodPriceInfo in results_from_slower_path:
+        all_goods_prices_info.append(goodPriceInfo)
+    return all_goods_prices_info
+    
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
