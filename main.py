@@ -1,3 +1,4 @@
+from enum import Enum
 from fastapi import FastAPI
 from ML_and_Data_Science.glovo_pricing import getAllPricesInfo
 from ML_and_Data_Science.food_recommendation import makePrediction
@@ -5,12 +6,18 @@ from ML_and_Data_Science.food_recommendation import makePrediction
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+class StoreName(str,Enum):
+    naivas="naivas"
+    quickmart="quickmart"
+class RegionName(str,Enum):
+    worldwide="Worldwide"
+    kenyan="Kenyan"
 class PriceRequest(BaseModel):
     names:list[str]
-    store:str
+    store:StoreName
 class RecommendationRequest(BaseModel):
     ingredientsList:list[str]
-    region:str
+    region:RegionName
 
 app=FastAPI()
 
@@ -40,7 +47,6 @@ async def getRecommendations(recommendation:RecommendationRequest):
     print(recommendation)
     try:
         response=makePrediction(recommendation.ingredientsList,recommendation.region)
-        print(response)
         return response
     except Exception as e:
         print('error in recommendation',e)
