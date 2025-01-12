@@ -44,7 +44,6 @@ async def getPricesInfo(ingredients:PriceRequest):
     
 @app.post("/recommendation")
 async def getRecommendations(recommendation:RecommendationRequest):
-    print(recommendation)
     try:
         response=makePrediction(recommendation.ingredientsList,recommendation.region)
         return response
