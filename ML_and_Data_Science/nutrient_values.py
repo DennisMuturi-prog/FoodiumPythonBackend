@@ -11,26 +11,27 @@ import os
 cwd = os.getcwd()
 print('current working directory',cwd)
 
+
 def singularize(word):
   return Word(word).singularize()
 food_densities=pd.read_excel('./datasets/density_DB_v2_0_final-1__1_.xlsx',
                              sheet_name='Density DB')
 nlp_ner = spacy.load("./datasets/ML Models/model-best-nlp-ner/model-best")
-recipe_data=pd.read_csv('./datasets/final_2M_sample_recipes.csv')
 def calculateStringLength(row):
   if pd.isna(row):
     return 0
   return len(row)
 food_densities['stringLength']=food_densities['Food name and description'].apply(calculateStringLength)
-food_nutrients=pd.read_csv('./datasets/knn_imputed_nutrients.csv')
+food_nutrients=pd.read_csv('./datasets/food_with_nutrients.csv')
 myarray=[2,1,23,24,46,61,76,146,151,176,180,150,207,208,201,210,211,215]
 wantedColumns=[]
 all_colums=food_nutrients.columns
 for pos in myarray:
-  wantedColumns.append(all_colums[pos])
+  wantedColumns.append(all_colums[pos-1])
+nutrientArray=wantedColumns[2:]
 food_nutrients=food_nutrients.copy()[wantedColumns]
+food_nutrients = food_nutrients.iloc[10:]
 food_nutrients['stringLength']=food_nutrients['description'].apply(calculateStringLength)
-recipe_data['ingredients_proportions']=recipe_data['ingredients'].apply(ast.literal_eval)
 def frac2string(s):
     i, f = s.groups(0)
     f = Fraction(f)
@@ -110,9 +111,8 @@ masses={
 }
 def populateNutrientValues(row):
   try:
-    ingredientProportions=row['ingredients_proportions']
+    ingredientProportions=row
     ingredientProportions=[re.sub(r'(?:(\d+)[-\s])?(\d+/\d+)', frac2string, s) for s in ingredientProportions]
-    # print('ingredients',ingredientProportions)
     nutrientValues=np.zeros(16,dtype=float)
     accuracy='results:'
     for idx,proportion in enumerate(ingredientProportions):
@@ -138,12 +138,14 @@ def populateNutrientValues(row):
         foodDensity=matches['densityMatch'].iloc[0]['Density in g/ml (including mass and bulk density)']
         if pd.isna(foodDensity):
           foodDensity=1
+      fdfood=food_nutrients.iloc[matches['nutrientMatch']['stringLength'].idxmin()]
+      print('nutrient value',fdfood)
       foodNutrient=food_nutrients.iloc[matches['nutrientMatch']['stringLength'].idxmin()][food_nutrients.columns.difference(['description','stringLength','fdc_id'],sort=False)].fillna(0).to_numpy(dtype='float32')
-      # print('nutrient value',foodNutrient)
       if not np.any(foodNutrient):
         newQuery=matches['nutrientMatch'].iloc[0][food_nutrients.columns.difference(['description','stringLength','fdc_id'],sort=False)]
         foodNutrient=newQuery.fillna(0).to_numpy(dtype='float32')
         # print('i was ttriggered',foodNutrient)
+      print(foodNutrient)
       if extracted_masses!='nothing found':
         if extracted_masses['unit'] in masses:
           foodNutrient=foodNutrient*(float(extracted_masses['number'])*masses[extracted_masses['unit']])/100
@@ -162,15 +164,16 @@ def populateNutrientValues(row):
           continue
       nutrientValues+=foodNutrient
       # print('without calculations',nutrientValues)
-    return nutrientValues
+    return dict(zip(nutrientArray, nutrientValues))
 
   except:
     print('error in populate nutrients at:')
-    return np.zeros(16,dtype=float)
-def testing():
-  return populateNutrientValues(recipe_data.loc[0])
-  
-  
+    return {column: 0.0 for column in wantedColumns}
+
+# def searchFood(searchQuery:str):
+#   return recipe_data[recipe_data['title']==searchQuery]
+ 
 if __name__=='__main__':
-  print(populateNutrientValues(recipe_data.loc[0]))
+  # print(searchFood('No-Bake Nut Cookies'))
+  print('main')
   

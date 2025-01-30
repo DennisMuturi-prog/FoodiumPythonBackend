@@ -1,7 +1,8 @@
 from enum import Enum
 from fastapi import FastAPI
-from ML_and_Data_Science.glovo_pricing import getAllPricesInfo
-from ML_and_Data_Science.food_recommendation import makePrediction
+from .ML_and_Data_Science.glovo_pricing import getAllPricesInfo
+from .ML_and_Data_Science.food_recommendation import makePrediction
+from .ML_and_Data_Science.nutrient_values import populateNutrientValues
 # from ML_and_Data_Science.nutrient_values import testing
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -29,6 +30,10 @@ app=FastAPI()
 @app.get("/")
 def testing():
     return ['hello','people']
+@app.post("/checkAccuracy")
+def checkAccuracyValues(ingredients:list[str]):
+    nutrientValues=populateNutrientValues(ingredients)
+    return nutrientValues
 @app.post("/pricing")
 async def getPricesInfo(ingredients:PriceRequest):
     try:

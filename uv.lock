@@ -516,14 +516,14 @@ requires-dist = [
     { name = "flask", specifier = ">=3.1.0" },
     { name = "gensim", specifier = ">=4.3.3" },
     { name = "lxml", specifier = ">=5.3.0" },
-    { name = "numpy", specifier = "==1.26.4" },
+    { name = "numpy", specifier = ">=1.26.4" },
     { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "pandas", specifier = "==2.1.4" },
+    { name = "pandas", specifier = ">=2.1.4" },
     { name = "pymongo", specifier = ">=4.10.1" },
     { name = "redis", specifier = ">=5.2.1" },
     { name = "scikit-learn", specifier = ">=1.6.0" },
     { name = "scipy", specifier = ">=1.13.1" },
-    { name = "spacy", specifier = "==3.7.5" },
+    { name = "spacy", specifier = ">=3.7.5" },
     { name = "textblob", specifier = ">=0.18.0.post0" },
 ]
 

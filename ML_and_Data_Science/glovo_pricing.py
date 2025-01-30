@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import re
 import json
 import redis
-redis_client=redis.StrictRedis(host='redis_stack_server',port=6379,decode_responses=True)
+redis_client=redis.StrictRedis(host='localhost',port=6379,decode_responses=True)
 
 
 
